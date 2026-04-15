@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score,precision_score, recall_score, f1_score, confusion_matrix, classification_report, roc_auc_score, roc_curve
 
+print("Clean data")
+print("="*35)
 df = pd.read_csv("cervical_cancer.csv")
 
 print("Original Dataset Shape:",df.shape)
@@ -20,24 +22,33 @@ for col in df.columns:
     if df[col].isnull().sum() > 0:
         median_val = df[col].median()
         df[col] = df[col].fillna(median_val)
-
+        
+print("Feature Engineering")
+print("="*30)
 std_cols = [col for col in df.columns if col.startswith('STDs:') and col not in ['STDs: Number of diagnosis','STDs: Time since first diagnosis','STDs: Time since last diagnosis']] 
 
 df['Total_STDs'] = df[std_cols].sum(axis=1)
-risk_features = ['Number of sexual partners','Smokes','Hormonal Contraceptives','IUD', 'STDs']
+risk_features = ['Number of sexual partners','Smokes','Hormonal Contraceptives','IUD','STDs'] 
 
 df['Risk_Score'] = df[risk_features].sum(axis=1)
+print("new features are 'Total_STDs' and 'Risk_Score'") 
+
+print("Feature-Target Correlation Analysis")
+print("="*30)
 print(df.corr()['Biopsy'].sort_values())
 
 print("new features are 'Total_STDs' and 'Risk_Score'")
 print("Final Dataset Shape:", df.shape) 
-
+print("Features and Target")
+print("="*30)
 target = 'Biopsy'          
 X = df.drop(columns=[target])
 y = df[target]
 
 print(f"\nTarget Distribution (Unbalanced):\n{y.value_counts()}")
 
+print("Train-Test Split(80:20)")
+print("="*30)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20,random_state=42,stratify=y)
 print(f"Training samples: {X_train.shape[0]}")
 print(f"Testing samples : {X_test.shape[0]}")
@@ -56,7 +67,7 @@ cm = confusion_matrix(y_test, y_pred)
 auc = roc_auc_score(y_test, y_pred_proba)
 
 
-print("DECISION TREE RESULTS (80:20 Split)")
+print("DECISION TREE RESULTS")
 print("\n")
 print(f"Accuracy   : {accuracy:.4f} ({accuracy*100:.2f}%)")
 print(f"Precision  : {precision:.4f}")
@@ -72,8 +83,8 @@ print(classification_report(y_test, y_pred, target_names=['No Cancer (0)','Cance
 fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba) 
 
 plt.figure(figsize=(8, 6))
-plt.plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC ={auc:.4f})')
-plt.plot([0, 1], [0, 1], color='red', linestyle='--',label='Random Guess')
+plt.plot(fpr,tpr,color='blue',label=f'ROC Curve (AUC ={auc:.4f})')
+plt.plot([0, 1], [0, 1],color='red',linestyle='--',label='Random Guess')
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC-AUC Curve - Decision Tree (Unbalanced Dataset)')
